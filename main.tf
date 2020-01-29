@@ -12,7 +12,7 @@ resource "aws_vpc" "app_vpc" {
   }
 }
 
-# Create subnet
+# Create subnet for app
 resource "aws_subnet" "app_subnet" {
   vpc_id = aws_vpc.app_vpc.id
   cidr_block = "10.0.0.0/24"
@@ -58,6 +58,7 @@ resource "aws_instance" "app_instance" {
   subnet_id = aws_subnet.app_subnet.id # Do this once you got your subnet
   instance_type = "t2.micro"
   associate_public_ip_address = true
+  user_data = data.template_file.app_init.rendered
   tags = {
     Name = var.tag
   }
@@ -79,8 +80,21 @@ resource "aws_security_group" "app_security_group" {
     # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    # TLS (change to whatever ports you need)
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
     Name = "${var.tag} - Security"
   }
+}
+
+data "template_file" "app_init" {
+  template = "${file("./scripts/init_script.sh.tpl")}"
 }
