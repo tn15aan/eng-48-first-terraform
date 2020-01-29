@@ -34,20 +34,9 @@ module "app" {
 
 
 # Call module for DB
-resource "aws_security_group" "app_security_group" {
-  name        = var.tag
-  description = "Allow traffic from app"
-  vpc_id      = aws_vpc.app_vpc.id
-
-  ingress {
-    from_port   = 27017
-    to_port     = 27017
-    protocol    = "tcp"
-    security_groups = [module.app.app_security_group_id]
-  }
-
-
-  tags = {
-    Name = "${var.tag} - Security"
-  }
+module "db" {
+  source = "./modules/db_tier"
+  vpc_id = aws_vpc.app_vpc.id
+  app_security_group_id = module.app.app_security_group_id
+  tag = var.tag
 }
