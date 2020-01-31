@@ -29,6 +29,7 @@ module "app" {
   tag = var.tag
   gateway_id = aws_internet_gateway.app_gw.id
   ami_id = var.ami_id
+  db_instance-ip = module.db.db_instance-ip
 }
 
 
