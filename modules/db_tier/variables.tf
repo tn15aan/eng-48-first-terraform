@@ -9,3 +9,7 @@ variable "app_security_group_id" {
 variable "tag" {
   description = "tag interpolated from original main and variable tf files"
 }
+
+variable "ami_id_db" {
+  description = "interpolated from variables"
+}

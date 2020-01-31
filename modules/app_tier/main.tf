@@ -4,7 +4,7 @@
 # Create subnet for app
 resource "aws_subnet" "app_subnet" {
   vpc_id = var.vpc_id
-  cidr_block = "10.0.0.0/24"
+  cidr_block = "10.0.1.0/24"
   availability_zone = "eu-west-1a"
   tags = {
     Name = "${var.tag} - Subnet"
@@ -37,17 +37,16 @@ resource "aws_instance" "app_instance" {
   subnet_id = aws_subnet.app_subnet.id # Do this once you got your subnet
   instance_type = "t2.micro"
   associate_public_ip_address = true
+  key_name = "thomas-eng-48-first-key"
   user_data = data.template_file.app_init.rendered
   tags = {
-    Name = var.tag
+    Name = "${var.tag}_app"
   }
 }
 
 
 # Security
 resource "aws_security_group" "app_security_group" {
-  name        = var.tag
-  description = "Set inbound and outbound traffic"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -55,8 +54,13 @@ resource "aws_security_group" "app_security_group" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
@@ -64,11 +68,21 @@ resource "aws_security_group" "app_security_group" {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  ingress {
+    # TLS (change to whatever ports you need)
+    from_port   = 27017
+    to_port     = 27017
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   tags = {
     Name = "${var.tag} - Security"
   }
